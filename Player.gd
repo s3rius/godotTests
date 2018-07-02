@@ -12,7 +12,18 @@ func _ready():
 	stamina = MAX_STAMINA
 	screensize = get_viewport_rect().size
 
-func _physics_process(delta):
+
+func _process(delta):
+	var velocity = _input()
+	var is_sprinting = _check_sprinting()
+	
+	velocity = _proceed_stamina(velocity, is_sprinting, delta)
+	_move(velocity, delta)
+	
+	_proceed_animation(velocity)
+	
+
+func _input():
 	var velocity = Vector2()
 	
 	if Input.is_action_pressed("ui_up") :
@@ -26,33 +37,50 @@ func _physics_process(delta):
 
 	if Input.is_action_pressed("ui_right"):
 		velocity.x += 1
+	
+	return velocity
+	
 
+func _check_sprinting():
+	if Input.is_action_pressed("ui_shift"):
+		return true
+	return false
+
+
+func _proceed_stamina(velocity, is_sprinting, delta):
 	if velocity.length() > 0 :
-		$Animation.playback_speed = 1
-		if Input.is_action_pressed("ui_shift"):
+		if is_sprinting:
 			if stamina <= 0:
 				velocity = velocity.normalized() * WALK_SPEED
 				stamina = 0
 			else :
-				$Animation.playback_speed = 1.5
 				velocity = velocity.normalized() * RUN_SPEED
 				stamina -= STAMINA_CONSUMP * delta
 		else :
 			velocity = velocity.normalized() * WALK_SPEED
 			stamina += (STAMINA_CONSUMP / 2) * delta
+	else :
+		stamina += STAMINA_CONSUMP * delta
+		
+	stamina = clamp(stamina, 0, MAX_STAMINA)
+	emit_signal("stamina_changed", stamina)
+	return velocity
+
+
+func _move(velocity, delta):
+	move_and_collide(velocity * delta)
+	
+	
+func _proceed_animation(velocity):
+	if velocity.length() > 0 :
 		if velocity.x > 0 :
 			$Animation.current_animation = "right"
 		elif velocity.x < 0 :
 			$Animation.current_animation = "left"
-		if velocity.y > 0 :
+		elif velocity.y > 0 :
 			$Animation.current_animation = "down"
 		elif velocity.y < 0 :
 			$Animation.current_animation = "up"
 	else :
 		$Animation.current_animation = "idle"
-		$Animation.playback_speed = 0.5
-		stamina += STAMINA_CONSUMP * delta
-	stamina = clamp(stamina, 0, MAX_STAMINA)
-	emit_signal("stamina_changed", stamina)
-	move_and_collide(velocity * delta)
 	

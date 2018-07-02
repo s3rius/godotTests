@@ -118,7 +118,7 @@ RUN_SPEED = 350
 texture = ExtResource( 2 )
 vframes = 8
 hframes = 10
-frame = 1
+frame = 50
 _sections_unfolded = [ "Animation", "Offset" ]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." index="1"]
